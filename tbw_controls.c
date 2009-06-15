@@ -4,6 +4,8 @@
 static gchar *GTK_CLEAR_IMAGE = "/usr/share/icons/gnome/24x24/actions/gtk-clear.png";
 static gboolean over_addfile;
 
+static gchar *file_chooser_last_folder = NULL;
+
 static gboolean on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data );
 gboolean on_barea_motion_notify_event ( GtkWidget *widget, GdkEventMotion *event, gpointer data );
 gboolean on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer data );
@@ -48,7 +50,15 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
                                                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                   GTK_STOCK_OK, GTK_RESPONSE_OK, NULL );
 
-          gtk_file_chooser_set_current_folder ( GTK_FILE_CHOOSER ( selection ), g_get_home_dir ( ) );
+          if ( file_chooser_last_folder == NULL )
+          {
+            gtk_file_chooser_set_current_folder ( GTK_FILE_CHOOSER ( selection ), g_get_home_dir ( ) );
+          } 
+          else
+          {
+            gtk_file_chooser_set_current_folder ( GTK_FILE_CHOOSER ( selection ), file_chooser_last_folder );            
+          }
+
           gtk_file_chooser_set_select_multiple ( GTK_FILE_CHOOSER ( selection ), TRUE );
           gtk_widget_show_all ( selection );
 
@@ -56,6 +66,7 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
 
           if ( response == GTK_RESPONSE_OK )
           {
+            file_chooser_last_folder = gtk_file_chooser_get_current_folder ( GTK_FILE_CHOOSER ( selection ) );
             files = gtk_file_chooser_get_filenames ( GTK_FILE_CHOOSER ( selection ) );
             while ( files != NULL )
             {

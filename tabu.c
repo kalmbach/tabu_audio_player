@@ -1,6 +1,18 @@
+#include <string.h>
 #include <gtk/gtk.h>
 #include <tag_c.h>
 #include "tbw.h"
+
+/*
+TODO Editar Tags?
+TODO Maximizar, restaurar en un entorno con varios desks virtuales
+TODO Doble click sobre un tema, o select + enter para ejecutarlo
+TODO ICONO de la applicacion cuando minimiza
+TODO Mostrar tiempo de pista (restante/total) o (pasado/total)
+TODO Barrita de progresso y seeker
+TODO Recuperar la playlist que tenia al cerrar? optional?
+*/
+
 
 /* Wellcome, global evils */
 GtkListStore *store;
@@ -36,26 +48,33 @@ get_formatted_song ( gchar *filename )
   TagLib_File *file;
   TagLib_Tag *tag;
 
-	file = taglib_file_new(filename);
+	file = taglib_file_new ( filename );
 
-  if(file == NULL)
+  if ( file == NULL )
   {
   	return ( NULL );
   }
 
-	tag = taglib_file_tag(file);
+	tag = taglib_file_tag ( file );
+  gchar *title = taglib_tag_title ( tag );
+  gchar *artist = taglib_tag_artist ( tag );
 
-	gchar *row = g_strconcat(taglib_tag_title(tag)," - <span size='smaller'><i>",
-													 taglib_tag_artist(tag),"</i></span>", NULL);
+  if ( strlen ( title ) == 0 )
+    title = "Desconocido";
 
-  taglib_tag_free_strings();
-  taglib_file_free(file);
+  if ( strlen ( artist ) == 0 )
+    artist = "Desconocido";
+
+	gchar *row = g_strconcat ( title," - <span size='smaller'><i>", artist, "</i></span>", NULL );
+
+  taglib_tag_free_strings ( );
+  taglib_file_free ( file );
 
   return ( row );
 }
 
 void
-add_item_to_playlist(GtkListStore *store, gchar* filename, gchar *uri)
+add_item_to_playlist ( GtkListStore *store, gchar* filename, gchar *uri )
 {
 	GtkTreeIter iter;
 	gchar *row = get_formatted_song ( filename );
@@ -63,14 +82,14 @@ add_item_to_playlist(GtkListStore *store, gchar* filename, gchar *uri)
   if ( row == NULL )
     return;
 
-	gtk_list_store_append (store, &iter);
-  gtk_list_store_set (store, &iter, 0, "", 1, row, 2, uri, -1);
+	gtk_list_store_append ( store, &iter );
+  gtk_list_store_set ( store, &iter, 0, "", 1, row, 2, uri, -1 );
 
   g_free ( row );
 }
 
 int
-main (int argc, char *argv[])
+main ( int argc, char *argv[] )
 {
   GtkWidget *window;
   GtkWidget *controls;
