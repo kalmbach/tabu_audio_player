@@ -58,6 +58,24 @@ tabu_player_previous ()
   playing = TRUE;                                            
 }
 
+void
+tabu_player_play_selection ( GtkTreeSelection *selection)
+{
+  GtkTreeModel *store;
+  gtk_list_store_set ( get_tabu_playlist(), &iter, 0, "", -1 );
+
+  if ( gtk_tree_selection_get_selected ( selection, &store, &iter ) )
+  {
+    gst_element_set_state ( GST_ELEMENT ( pipeline ), GST_STATE_NULL );
+    gtk_tree_model_get ( GTK_TREE_MODEL( get_tabu_playlist () ), &iter, 2, &current_song, -1);
+    gtk_list_store_set ( get_tabu_playlist(), &iter, 0, pointer, -1 );
+    scroll_to_song ( iter );     
+    g_object_set(G_OBJECT(pipeline), "uri", current_song, NULL);
+    gst_element_set_state ( GST_ELEMENT ( pipeline ), GST_STATE_PLAYING );
+    playing = TRUE;
+  }
+}
+
 void 
 tabu_player_play ()
 {

@@ -4,9 +4,8 @@
 #include "tbw.h"
 
 /*
-TODO Editar Tags?
+TODO Filtrar solo audio files en el open file dialog
 TODO Maximizar, restaurar en un entorno con varios desks virtuales
-TODO Doble click sobre un tema, o select + enter para ejecutarlo
 TODO ICONO de la applicacion cuando minimiza
 TODO Mostrar tiempo de pista (restante/total) o (pasado/total)
 TODO Barrita de progresso y seeker
@@ -60,10 +59,22 @@ get_formatted_song ( gchar *filename )
   gchar *artist = taglib_tag_artist ( tag );
 
   if ( strlen ( title ) == 0 )
-    title = "Desconocido";
+  {
+    gchar **tokens = NULL;
+    int i;
+    tokens = g_strsplit ( filename, "/", 0 );
+    if ( tokens != NULL )
+    {
+      while ( tokens[i] != NULL )
+        i++;
+  
+      title = g_strdup ( tokens[i-1] );      
+    }
+    g_strfreev ( tokens );
+  }
 
   if ( strlen ( artist ) == 0 )
-    artist = "Desconocido";
+    artist = "Unknown";
 
 	gchar *row = g_strconcat ( title," - <span size='smaller'><i>", artist, "</i></span>", NULL );
 
@@ -88,6 +99,14 @@ add_item_to_playlist ( GtkListStore *store, gchar* filename, gchar *uri )
   g_free ( row );
 }
 
+void
+playlist_row_activated_callback ( GtkTreeView *view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer data )
+{
+  GtkTreeSelection *selection = gtk_tree_view_get_selection ( view );
+
+  tabu_player_play_selection ( selection );
+}
+
 int
 main ( int argc, char *argv[] )
 {
@@ -98,32 +117,34 @@ main ( int argc, char *argv[] )
   GtkWidget           *view; */
   GtkWidget           *scrollview;
 
-  gtk_init(&argc, &argv);
+  gtk_init( &argc, &argv );
   
-  window = tbw_window_new(GTK_WINDOW_TOPLEVEL);
-  g_signal_connect( window, "destroy", G_CALLBACK ( gtk_main_quit ), NULL );  
+  window = tbw_window_new ( GTK_WINDOW_TOPLEVEL );
+  g_signal_connect ( window, "destroy", G_CALLBACK ( gtk_main_quit ), NULL );  
   
-  view = gtk_tree_view_new ();
-	gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (view), FALSE);
-	gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
-	gtk_tree_selection_set_mode (GTK_TREE_SELECTION (gtk_tree_view_get_selection (GTK_TREE_VIEW (view))), GTK_SELECTION_SINGLE);
-  renderer = gtk_cell_renderer_text_new ();
-  gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view), -1,"Columna", renderer, "markup", 0, NULL);
-  gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (view), -1,"Columna", renderer, "markup", 1, NULL);
-  store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
-  gtk_tree_view_set_model (GTK_TREE_VIEW (view), GTK_TREE_MODEL(store));  
+  view = gtk_tree_view_new ( );
+	gtk_tree_view_set_headers_visible ( GTK_TREE_VIEW ( view ), FALSE );
+	gtk_tree_view_set_rules_hint ( GTK_TREE_VIEW ( view ), TRUE );
+	gtk_tree_selection_set_mode ( GTK_TREE_SELECTION ( gtk_tree_view_get_selection ( GTK_TREE_VIEW ( view ) ) ), GTK_SELECTION_SINGLE );
+  renderer = gtk_cell_renderer_text_new ( );
+  gtk_tree_view_insert_column_with_attributes ( GTK_TREE_VIEW ( view ), -1, "Columna", renderer, "markup", 0, NULL );
+  gtk_tree_view_insert_column_with_attributes ( GTK_TREE_VIEW ( view ), -1, "Columna", renderer, "markup", 1, NULL );
+  store = gtk_list_store_new ( 3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING );
+  gtk_tree_view_set_model ( GTK_TREE_VIEW ( view ), GTK_TREE_MODEL ( store ) );  
 
-  scrollview = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrollview), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	gtk_container_add (GTK_CONTAINER (scrollview), GTK_WIDGET (view));
+  g_signal_connect ( G_OBJECT ( view ), "row-activated", G_CALLBACK ( playlist_row_activated_callback ), NULL );
+
+  scrollview = gtk_scrolled_window_new ( NULL, NULL );
+	gtk_scrolled_window_set_policy ( GTK_SCROLLED_WINDOW ( scrollview ), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC );
+	gtk_container_add ( GTK_CONTAINER ( scrollview ), GTK_WIDGET ( view ) );
 
   controls = tbw_controls_new ( store );    
 
   tbw_window_pack ( scrollview, TRUE, TRUE, 0 );
   tbw_window_pack ( controls, FALSE, FALSE, 0 );  
 
-  tabu_player_main();
-  gtk_main();
+  tabu_player_main ( );
+  gtk_main ( );
 
   return 0;
 }

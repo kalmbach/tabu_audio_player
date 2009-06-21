@@ -43,7 +43,7 @@ on_title_clicked ( GtkWidget *widget, GdkEventButton *event, gpointer data )
           {
             tabu_player_quit ( );                        
             gtk_main_quit ( );
-          }
+          }          
           else if ( (event->x > ( widget->allocation.width - 70 ) ) && ( event->x < ( widget->allocation.width - 50 ) ) )
           { 
             gtk_window_iconify ( GTK_WINDOW ( widget ) );

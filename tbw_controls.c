@@ -1,19 +1,44 @@
 #include <gtk/gtk.h>
 #include "tbw.h"
 
-static gchar *GTK_CLEAR_IMAGE = "/usr/share/icons/gnome/24x24/actions/gtk-clear.png";
-static gboolean over_addfile;
+/*static gchar *GTK_CLEAR_IMAGE = "/usr/share/icons/gnome/24x24/actions/gtk-clear.png";*/
 
+#define GTK_CLEAR_IMAGE "gtk-clear"
+static gchar *gtk_clear_image_path = NULL;
+static gboolean over_addfile = FALSE;
+static gboolean over_resize = FALSE;
 static gchar *file_chooser_last_folder = NULL;
 
 static gboolean on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data );
 gboolean on_barea_motion_notify_event ( GtkWidget *widget, GdkEventMotion *event, gpointer data );
 gboolean on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer data );
 
+/* a better way to get the path of a stock image */
+gchar *
+tbw_get_icon_path (const char *icon)
+{
+  gchar	*ret = NULL;
+  GtkIconTheme	*theme = NULL;
+
+  theme = gtk_icon_theme_get_default ();
+  if ( theme )
+  {
+    GtkIconInfo *info = gtk_icon_theme_lookup_icon ( theme,	icon,	24,	GTK_ICON_LOOKUP_FORCE_SIZE );
+    if ( info )    {
+      ret = g_strdup ( gtk_icon_info_get_filename ( info ) );
+      gtk_icon_info_free ( info );
+    }
+  }
+  
+  return ret;
+}
+
+
 gboolean
 on_barea_motion_notify_event (GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
   over_addfile = FALSE;
+  over_resize = FALSE;
 
   if ((event->y > 20) && (event->y < 40))
   {
@@ -22,7 +47,10 @@ on_barea_motion_notify_event (GtkWidget *widget, GdkEventMotion *event, gpointer
 	    over_addfile = TRUE;
     }
   }
-
+  else if ( ( event->x > ( widget->allocation.width - 10 ) ) && ( event->y > ( widget->allocation.height - 10 ) ))
+  {
+    over_resize = TRUE;
+  }
 
   gtk_widget_queue_draw (widget);
 
@@ -117,7 +145,11 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
         }
       }    
 
-    
+      /* El tamaño si importa */
+      if ( ( event->y > ( widget->allocation.height - 20 ) ) && ( event->x > ( widget->allocation.width - 20 ) ) )
+      {
+        gtk_window_resize ( GTK_WINDOW ( widget ), event->x_root, event->y_root );
+      }
     }
   }
 
@@ -274,10 +306,26 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
 
   // dibujamos el Clear Button
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );
-  cairo_surface_t *image = cairo_image_surface_create_from_png ( GTK_CLEAR_IMAGE );
+  /*cairo_surface_t *image = cairo_image_surface_create_from_png ( GTK_CLEAR_IMAGE );*/
+
+  cairo_surface_t *image = cairo_image_surface_create_from_png ( gtk_clear_image_path );
+
   cairo_set_source_surface ( cr, image, x0 + 50, y0 + 20 );
   cairo_paint ( cr );
   cairo_stroke ( cr );
+
+  // dibujamos el resize control
+  if ( over_resize )
+  {
+    cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );    
+    cairo_set_source_rgba ( cr, 1.0f, 0.5f, 0.0f, 0.6f );
+    cairo_arc ( cr, x1 - 10, y1 - 10, 10, 0, 1.57 );
+    cairo_line_to ( cr, x1 - 20, y1 );
+    cairo_line_to ( cr, x1, y1 - 20 );  
+    cairo_line_to ( cr, x1, y1 - 10 );
+    cairo_fill ( cr );  
+    cairo_stroke ( cr );    
+  }  
 
   cairo_destroy (cr);
 
@@ -287,6 +335,8 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
 GtkWidget *
 tbw_controls_new ( GtkListStore *playlist )
 {
+  gtk_clear_image_path = tbw_get_icon_path ( GTK_CLEAR_IMAGE );
+
   GtkWidget *barea = gtk_drawing_area_new ( );
   gtk_widget_add_events ( GTK_WIDGET ( barea ), GDK_BUTTON_PRESS_MASK );
   gtk_widget_add_events ( GTK_WIDGET ( barea ), GDK_POINTER_MOTION_MASK );
