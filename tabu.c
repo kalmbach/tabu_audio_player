@@ -1,3 +1,4 @@
+#include <gdk/gdkkeysyms.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <tag_c.h>
@@ -26,19 +27,14 @@ get_tabu_playlist ()
 void
 clear_tabu_playlist ()
 {
-  gtk_list_store_clear ( store );
+  tabu_player_clear_playlist ( );
 }
 
 void
 scroll_to_song (GtkTreeIter iter)
 {
   GtkTreePath *path = gtk_tree_model_get_path ( GTK_TREE_MODEL ( store ), &iter );
-  gtk_tree_view_scroll_to_cell ( GTK_TREE_VIEW ( view ),
-                               path,
-                               NULL,
-                               FALSE,
-                               0,
-                               0);
+  gtk_tree_view_scroll_to_cell ( GTK_TREE_VIEW ( view ), path, NULL, FALSE, 0, 0 );
 }
 
 gchar *
@@ -46,6 +42,9 @@ get_formatted_song ( gchar *filename )
 {
   TagLib_File *file;
   TagLib_Tag *tag;
+  gchar *title = NULL;
+  gchar *artist = NULL; 
+  gchar *row = NULL;
 
 	file = taglib_file_new ( filename );
 
@@ -54,14 +53,15 @@ get_formatted_song ( gchar *filename )
   	return ( NULL );
   }
 
-	tag = taglib_file_tag ( file );
-  gchar *title = taglib_tag_title ( tag );
-  gchar *artist = taglib_tag_artist ( tag );
+	tag = taglib_file_tag ( file );  
+  title = taglib_tag_title ( tag );
+  artist = taglib_tag_artist ( tag );
 
   if ( strlen ( title ) == 0 )
   {
     gchar **tokens = NULL;
-    int i;
+    int i = 0;
+
     tokens = g_strsplit ( filename, "/", 0 );
     if ( tokens != NULL )
     {
@@ -76,7 +76,15 @@ get_formatted_song ( gchar *filename )
   if ( strlen ( artist ) == 0 )
     artist = "Unknown";
 
-	gchar *row = g_strconcat ( title," - <span size='smaller'><i>", artist, "</i></span>", NULL );
+	row = g_strconcat ( 
+    g_strdup ( title ),
+    " - <span size='smaller'><i>", 
+    g_strdup ( artist ), 
+    "</i></span>", 
+    NULL );
+
+  /*g_free ( title );
+  g_free ( artist );*/
 
   taglib_tag_free_strings ( );
   taglib_file_free ( file );
@@ -107,6 +115,26 @@ playlist_row_activated_callback ( GtkTreeView *view, GtkTreePath *path, GtkTreeV
   tabu_player_play_selection ( selection );
 }
 
+void
+playlist_key_press_callback ( GtkWidget *tview, GdkEventKey *event, gpointer data )
+{
+  GtkTreeSelection *selection = gtk_tree_view_get_selection ( GTK_TREE_VIEW ( tview ) );
+  if ( event->type == GDK_KEY_PRESS )
+  {
+    switch ( event->keyval )
+    {
+      /* if the delete key is pressed. remove the item from the playlist */
+      case GDK_Delete:
+        tabu_player_remove_selection ( selection );
+        break;
+
+      default: 
+        return;
+    }
+  }
+}
+
+
 int
 main ( int argc, char *argv[] )
 {
@@ -133,6 +161,7 @@ main ( int argc, char *argv[] )
   gtk_tree_view_set_model ( GTK_TREE_VIEW ( view ), GTK_TREE_MODEL ( store ) );  
 
   g_signal_connect ( G_OBJECT ( view ), "row-activated", G_CALLBACK ( playlist_row_activated_callback ), NULL );
+  g_signal_connect ( G_OBJECT ( view ), "key-press-event", G_CALLBACK ( playlist_key_press_callback ), NULL );
 
   scrollview = gtk_scrolled_window_new ( NULL, NULL );
 	gtk_scrolled_window_set_policy ( GTK_SCROLLED_WINDOW ( scrollview ), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC );

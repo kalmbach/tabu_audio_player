@@ -85,8 +85,14 @@ gboolean
 on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data )
 {
   cairo_t *cr;
+  cairo_pattern_t *pat;
+  double x0;
+  double y0;
+  double y1;
+  double x1;
+  double radio;
 
-  // fondo transparente para el title
+  /* fondo transparente para el title */
   cr = gdk_cairo_create ( widget->window );
   cairo_rectangle ( cr, 0, 0, widget->allocation.width, widget->allocation.height );
   cairo_set_source_rgba ( cr, 1.0f, 1.0f, 1.0f, 0.0f );
@@ -94,13 +100,13 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
 	cairo_paint ( cr );
   cairo_destroy ( cr );
 
-  // path del title
+  /* path del title */
   cr = gdk_cairo_create ( widget->window );
-  double x0 = widget->allocation.x;
-  double y0 = widget->allocation.y;
-  double y1 = widget->allocation.y + widget->allocation.height;
-  double x1 = widget->allocation.x + widget->allocation.width;
-  double radio = 10;
+  x0 = widget->allocation.x;
+  y0 = widget->allocation.y;
+  y1 = y0 + widget->allocation.height;
+  x1 = x0 + widget->allocation.width;
+  radio = 10;
 
   cairo_arc ( cr, x0 + radio, y0 + radio, radio, 180 * ( 3.14 / 180 ), 270 * ( 3.14 / 180 ) );
   cairo_line_to ( cr, x1 - radio, y0 );
@@ -109,8 +115,7 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_line_to ( cr, x0, y1 );
   cairo_close_path ( cr );
 
-  // pintamos el path del title con un patron lineal horizontal
-  cairo_pattern_t *pat;
+  /* pintamos el path del title con un patron lineal horizontal */
 	cairo_set_operator ( cr, CAIRO_OPERATOR_SOURCE );
   pat = cairo_pattern_create_linear ( x0, y1/2,  x1, y1/2 );
   cairo_pattern_add_color_stop_rgba ( pat, 1, 0.0f, 0.0f, 0.0f, 0.9f );
@@ -118,7 +123,7 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_set_source ( cr, pat );
 	cairo_fill ( cr );
 
-  // escribimos el text en el title.
+  /* escribimos el text en el title. */
   cairo_select_font_face ( cr, "monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
   cairo_set_font_size ( cr, 11.0 );
   cairo_set_source_rgb ( cr, 1.0, 1.0, 1.0 );
@@ -126,7 +131,7 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_show_text ( cr, "Tabu - Basic Audio Player" );
   cairo_stroke ( cr );
 
-  // dibujamos el container para los buttons del title
+  /* dibujamos el container para los buttons del title */
   cairo_move_to ( cr, x1 - 10, y0 );
   cairo_line_to ( cr, x1 - 10, y0 + 15 );
   cairo_arc ( cr, x1 - 15, y0 + 15, 5,  0, 90 * ( 3.14 / 180 ) );
@@ -139,7 +144,7 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_fill ( cr );
   cairo_stroke ( cr );
 
-  // dibujamos el Close Button
+  /* dibujamos el Close Button */
   if ( over_close )
   {
     cairo_set_source_rgba ( cr, 1.0f, 0.0f, 0.0f, 0.9f );
@@ -154,7 +159,7 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_line_to ( cr, x1 - 24, y0 + 14 );
   cairo_stroke ( cr );
 
-  // dibujamos el Maximize Button
+  /* dibujamos el Maximize Button */
   if ( over_maximize )
   {
     cairo_set_source_rgba ( cr, 1.0f, 0.5f, 0.0f, 0.9f );    
@@ -166,7 +171,7 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_arc ( cr, x1-40, y0+10, 4, 0, 6.28 );
   cairo_stroke ( cr );
 
-  // dibujamos el Minimize Button
+  /* dibujamos el Minimize Button */
   if ( over_minimize )
   {
     cairo_set_source_rgba ( cr, 1.0f, 1.0f, 0.2f, 0.9f );    
@@ -208,6 +213,7 @@ GtkWidget *
 tbw_window_new ( GtkWindowType type ) 
 {
   GtkWidget *window;
+  GtkWidget *window_title;
 
   window = gtk_window_new ( type );
   gtk_window_set_default_size ( GTK_WINDOW ( window ), 300, 450 ); 
@@ -215,7 +221,7 @@ tbw_window_new ( GtkWindowType type )
   gtk_widget_set_app_paintable ( window, TRUE );
   gtk_window_set_decorated ( GTK_WINDOW ( window ), FALSE );
 	
-  GtkWidget *window_title = gtk_drawing_area_new ( );
+  window_title = gtk_drawing_area_new ( );
   gtk_widget_set_size_request ( GTK_WIDGET ( window_title), -1, 40 );
   gtk_widget_add_events ( GTK_WIDGET ( window_title ), GDK_BUTTON_PRESS_MASK );
   gtk_widget_add_events ( GTK_WIDGET ( window_title ), GDK_POINTER_MOTION_MASK );

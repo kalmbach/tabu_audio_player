@@ -94,6 +94,7 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
 
           if ( response == GTK_RESPONSE_OK )
           {
+            g_free ( file_chooser_last_folder );
             file_chooser_last_folder = gtk_file_chooser_get_current_folder ( GTK_FILE_CHOOSER ( selection ) );
             files = gtk_file_chooser_get_filenames ( GTK_FILE_CHOOSER ( selection ) );
             while ( files != NULL )
@@ -148,7 +149,12 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
       /* El tamaño si importa */
       if ( ( event->y > ( widget->allocation.height - 20 ) ) && ( event->x > ( widget->allocation.width - 20 ) ) )
       {
-        gtk_window_resize ( GTK_WINDOW ( widget ), event->x_root, event->y_root );
+        gtk_window_begin_resize_drag ( GTK_WINDOW ( gtk_widget_get_toplevel ( widget ) ),
+                                       GDK_WINDOW_EDGE_SOUTH_EAST,
+                                       event->button,
+                                       event->x_root,
+                                       event->y_root,
+                                       event->time);
       }
     }
   }
@@ -160,8 +166,15 @@ static gboolean
 on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data )
 {
   cairo_t *cr;
+  cairo_pattern_t *pat;
+  cairo_surface_t *image;
+  double x0 = 0;
+  double y0 = 0;
+  double y1 = 0;
+  double x1 = 0;
+  double radio = 10;
 
-  // fondo transparente para el title
+  /* fondo transparente para el title */
   cr = gdk_cairo_create ( widget->window );
   cairo_rectangle ( cr, widget->allocation.x, widget->allocation.y, widget->allocation.width, widget->allocation.height );
   cairo_set_source_rgba ( cr, 1.0f, 1.0f, 1.0f, 0.0f );
@@ -169,13 +182,10 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
 	cairo_paint ( cr );
   cairo_destroy ( cr );
 
-  // path del title
+  /* path del title */
   cr = gdk_cairo_create ( widget->window );
-  double x0 = 0;
-  double y0 = 0;
-  double y1 = 0 + widget->allocation.height;
-  double x1 = 0 + widget->allocation.width;
-  double radio = 10;
+  y1 += widget->allocation.height;
+  x1 += widget->allocation.width;
 
   cairo_arc ( cr, x1 - radio, y1 - radio, radio, 0, 1.57 );
   cairo_line_to ( cr, x0 - radio, y1 );
@@ -184,8 +194,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_line_to ( cr, x1, y0 );
   cairo_close_path ( cr );
 
-  // pintamos el path del title con un patron lineal horizontal
-  cairo_pattern_t *pat;
+  /* pintamos el path del title con un patron lineal horizontal */
 	cairo_set_operator ( cr, CAIRO_OPERATOR_SOURCE );
   pat = cairo_pattern_create_linear ( x0, y1/2,  x1, y1/2 );
   cairo_pattern_add_color_stop_rgba ( pat, 1, 0.0f, 0.0f, 0.0f, 0.9f );
@@ -193,7 +202,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_set_source ( cr, pat );
 	cairo_fill ( cr );
 
-  // dibujamos el Play Button
+  /* dibujamos el Play Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );  
   cairo_set_source_rgba ( cr, 0.0f, 0.0f, 0.0f, 1.0f );
   cairo_set_line_width ( cr, 2.0 );
@@ -232,7 +241,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
     cairo_stroke ( cr );   
   }
 
-  // dibujamos el Next Button
+  /* dibujamos el Next Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );  
   cairo_set_source_rgba ( cr, 0.0f, 0.0f, 0.0f, 1.0f );
   cairo_set_line_width ( cr, 2.0 );
@@ -258,7 +267,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_line_to ( cr, x1 - 78, y0 + 30 );
   cairo_stroke ( cr );
 
-  // dibujamos el Prev Button
+  /* dibujamos el Prev Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );  
   cairo_set_source_rgba ( cr, 0.0f, 0.0f, 0.0f, 1.0f );
   cairo_set_line_width ( cr, 2.0 );
@@ -284,7 +293,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_line_to ( cr, x1 - 97, y0 + 30 );
   cairo_stroke ( cr );
 
-  // dibujamos el Add Button
+  /* dibujamos el Add Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER ); 
   if ( over_addfile )
   {
@@ -304,17 +313,15 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_line_to ( cr, x0 + 30, y0 + 40 );
   cairo_stroke ( cr );
 
-  // dibujamos el Clear Button
+  /* dibujamos el Clear Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );
-  /*cairo_surface_t *image = cairo_image_surface_create_from_png ( GTK_CLEAR_IMAGE );*/
-
-  cairo_surface_t *image = cairo_image_surface_create_from_png ( gtk_clear_image_path );
+  image = cairo_image_surface_create_from_png ( gtk_clear_image_path );
 
   cairo_set_source_surface ( cr, image, x0 + 50, y0 + 20 );
   cairo_paint ( cr );
   cairo_stroke ( cr );
 
-  // dibujamos el resize control
+  /* dibujamos el resize control */
   if ( over_resize )
   {
     cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );    
@@ -335,16 +342,19 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
 GtkWidget *
 tbw_controls_new ( GtkListStore *playlist )
 {
+  GtkWidget *barea;
+  GtkWidget *box;
+
   gtk_clear_image_path = tbw_get_icon_path ( GTK_CLEAR_IMAGE );
 
-  GtkWidget *barea = gtk_drawing_area_new ( );
+  barea = gtk_drawing_area_new ( );
   gtk_widget_add_events ( GTK_WIDGET ( barea ), GDK_BUTTON_PRESS_MASK );
   gtk_widget_add_events ( GTK_WIDGET ( barea ), GDK_POINTER_MOTION_MASK );
   g_signal_connect ( barea, "button-press-event", G_CALLBACK ( on_barea_button_press_event ), playlist );
   g_signal_connect ( barea, "motion-notify-event", G_CALLBACK ( on_barea_motion_notify_event ), NULL );
   g_signal_connect ( barea, "expose-event", G_CALLBACK ( on_barea_expose_event ), NULL );
 
-  GtkWidget *box = gtk_hbox_new ( FALSE, 0 );
+  box = gtk_hbox_new ( FALSE, 0 );
   gtk_widget_set_size_request ( GTK_WIDGET ( box ), -1, 60 );
   gtk_box_pack_start ( GTK_BOX ( box ), GTK_WIDGET ( barea ), TRUE, TRUE, 0 );
   gtk_widget_show_all ( GTK_WIDGET ( box ) );
