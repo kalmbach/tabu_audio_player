@@ -21,8 +21,8 @@ libtoolize -f -c
 aclocal --force
 autoheader -f
 autoconf -f
-cp -f $(dirname $(which automake))/../share/automake/mkinstalldirs ./
-cp -f $(dirname $(which automake))/../share/gettext/config.rpath ./
+cp -f /usr/share/automake/mkinstalldirs ./
+cp -f /usr/share/gettext/config.rpath ./
 automake -a -c --gnu --foreign
 
 if [ "$1" == "--git" ]; then
