@@ -24,7 +24,7 @@ tbw_get_icon_path (const char *icon)
   if ( theme )
   {
     GtkIconInfo *info = gtk_icon_theme_lookup_icon ( theme,	icon,	24,	GTK_ICON_LOOKUP_FORCE_SIZE );
-    if ( info )    {
+    if ( info )    {
       ret = g_strdup ( gtk_icon_info_get_filename ( info ) );
       gtk_icon_info_free ( info );
     }
