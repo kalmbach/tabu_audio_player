@@ -12,12 +12,44 @@ Feature highlights:
 - Tabu uses GStreamer as it's backend
 - Fast and light-weight
 
+Requirements
+============
+
+Tabu requires the following packages:
+
+- gtk+2 >= 2.10
+- taglib >= 1.5 (C Bindings)
+- gstreamer
+
 Installation
 ============
 
+unpack the source archive and run the following command(s):
+
+$ cd tabu_audio_player-1.4
+
+$ ./configure --prefix=/usr
+
+If this completes without any errors, run the make command in order to
+compile tabu.
+
+$ make
+
+And then run make install (as root) to install tabu.
+
+$ make install
 
 Reporting bugs
 ==============
+
+Report any bug(s) by sending us an email at kalmbach@gmail.com or 
+priyankmg@gmail.com with a detailed description and steps to reproduce 
+the bug. Also mention your version of Tabu.
+
+Authors
+=======
+
+See the AUTHORS file included with this package.
 
 
 
