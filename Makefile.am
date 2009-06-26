@@ -17,4 +17,7 @@ tabu_SOURCES = tabu.c tbw.h tabu_player.c tbw_controls.c tbw_window.c
 desktopdir = $(datadir)/applications
 desktop_DATA = tabu.desktop
 
-EXTRA_DIST = $(desktop_DATA)
+pixmap_icondir = $(datadir)/pixmaps
+pixmap_icon_DATA = tabu.png
+
+EXTRA_DIST = $(desktop_DATA) $(pixmap_icon_DATA)
