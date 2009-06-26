@@ -66,3 +66,4 @@ Tabu $VERSION configuration summary:
         compiler flags           : ${CFLAGS}
 	debug support            : ${debug}
 "
+
