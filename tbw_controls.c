@@ -201,6 +201,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_pattern_add_color_stop_rgba ( pat, 0, 0.2f, 0.2f, 0.2f, 0.9f );
   cairo_set_source ( cr, pat );
 	cairo_fill ( cr );
+  cairo_pattern_destroy ( pat );
 
   /* dibujamos el Play Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );  
@@ -218,6 +219,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_set_source_rgba ( cr, 1.0f, 1.0f, 1.0f, 0.1f );
   cairo_fill ( cr );
   cairo_stroke ( cr );
+
   
   if ( tabu_player_is_playing() )
   {
@@ -320,6 +322,7 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_set_source_surface ( cr, image, x0 + 50, y0 + 20 );
   cairo_paint ( cr );
   cairo_stroke ( cr );
+  cairo_surface_destroy ( image );
 
   /* dibujamos el resize control */
   if ( over_resize )

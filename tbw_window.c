@@ -122,6 +122,7 @@ on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   cairo_pattern_add_color_stop_rgba ( pat, 0, 0.2f, 0.2f, 0.2f, 0.9f );
   cairo_set_source ( cr, pat );
 	cairo_fill ( cr );
+  cairo_pattern_destroy ( pat );
 
   /* escribimos el text en el title. */
   cairo_select_font_face ( cr, "monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );

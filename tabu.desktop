@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Tabu
+Comment=Tabu is a basic GTK+ audio player
+Exec=tabu
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=tabu.png
+Categories=Application;GTK;AudioVideo;
+MimeType=

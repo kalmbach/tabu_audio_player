@@ -25,6 +25,7 @@ dnl GSTREAMER
 PKG_CHECK_MODULES([GSTREAMER], [gstreamer-0.10 >= 0.10])
 
 dnl TAGLIB
-PKG_CHECK_MODULES([TAGLIB], [taglib >= 1.5])
+# PKG_CHECK_MODULES([TAGLIB], [taglib >= 1.5])
+PKG_CHECK_MODULES([TAGLIB], [taglib_c >= 1.5])
 
 AC_OUTPUT
