@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([tabu_audio_player], 1.4, [kalmbach@gmail.com], tabu_audio_player)
-AM_INIT_AUTOMAKE(tabu_audio_player, 1.4)
+AC_INIT([tabu_audio_player], 1.4.1, [kalmbach@gmail.com], tabu_audio_player)
+AM_INIT_AUTOMAKE(tabu_audio_player, 1.4.1)
 AC_CONFIG_SRCDIR([tbw_window.c])
 AC_LANG(C)
 AC_CONFIG_HEADERS([config.h])
