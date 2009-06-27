@@ -4,8 +4,8 @@ Tabu Audio Player
 Tabu is a simple GTK+ audio player with client-side decorations drawn
 using Cairo.
 
-In simple words, it doesn't make use standard GTK+ widgets, instead
-using it's own. Tabu is designed to be simple, yet elegant. It's still
+In simple words, it doesn't make use of standard GTK+ widgets, instead
+uses it's own. Tabu is designed to be simple, yet elegant. It's still
 in it's early stages of development and supports only basic music playing functionality.
 
 Feature highlights:
