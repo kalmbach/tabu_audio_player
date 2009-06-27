@@ -1,0 +1,9 @@
+VERSION		DESCRIPTION
+------------------------------------------------------------------------
+1.4.1		- Tabu gets an icon \o/
+		- Oh, and a desktop menu entry
+		- Improvements in the build system
+			- Now supports building with debug support
+			- Cleanup unwanted files
+		- Added gettext support. Tabu can now be translated to other languages.
+		- Minor tweaks
