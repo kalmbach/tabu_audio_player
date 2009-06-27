@@ -57,7 +57,7 @@ get_formatted_song ( gchar *filename )
   title = taglib_tag_title ( tag );
   artist = taglib_tag_artist ( tag );
 
-  if ( strlen ( title ) == 0 )
+  if ( strlen ( title )  == 0 )
   {
     gchar **tokens = NULL;
     int i = 0;
@@ -75,11 +75,11 @@ get_formatted_song ( gchar *filename )
 
   if ( strlen ( artist ) == 0 )
     artist = "Unknown";
-
+  
 	row = g_strconcat ( 
-    g_strdup ( title ),
+    g_strdup ( g_markup_escape_text ( title, -1 ) ),
     " - <span size='smaller'><i>", 
-    g_strdup ( artist ), 
+    g_strdup ( g_markup_escape_text ( artist, -1 ) ), 
     "</i></span>", 
     NULL );
 
