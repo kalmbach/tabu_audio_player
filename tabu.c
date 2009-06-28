@@ -4,16 +4,6 @@
 #include <tag_c.h>
 #include "tbw.h"
 
-/*
-TODO Filtrar solo audio files en el open file dialog
-TODO Maximizar, restaurar en un entorno con varios desks virtuales
-TODO ICONO de la applicacion cuando minimiza
-TODO Mostrar tiempo de pista (restante/total) o (pasado/total)
-TODO Barrita de progresso y seeker
-TODO Recuperar la playlist que tenia al cerrar? optional?
-*/
-
-
 /* Wellcome, global evils */
 GtkListStore *store;
 GtkWidget *view;
