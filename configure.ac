@@ -6,6 +6,11 @@ AC_INIT([tabu_audio_player], 1.4.1, [kalmbach@gmail.com], tabu_audio_player)
 AM_INIT_AUTOMAKE(tabu_audio_player, 1.4.1)
 AC_CONFIG_SRCDIR([tbw_window.c])
 AC_LANG(C)
+
+dnl TABU defines
+TABU_DEFINES='-DDATA_DIR="\"$(datadir)\"" -DPKGDATA_DIR="\"$(pkgdatadir)\""'
+AC_SUBST([TABU_DEFINES])
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
 
@@ -14,6 +19,7 @@ AC_PROG_CC
 
 AC_ARG_ENABLE(debug,
     AC_HELP_STRING([  --enable-debug], [Enable debugging support]), [debug="yes"])
+
 
 # Checks for libraries.
 dnl pkg-config

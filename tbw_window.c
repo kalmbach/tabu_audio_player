@@ -12,6 +12,12 @@ gboolean on_title_motion_notify_event ( GtkWidget *widget, GdkEventMotion *event
 gboolean on_title_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data );
 static void on_alpha_screen_changed ( GtkWidget* pWidget, GdkScreen* pOldScreen, GtkWidget* pLabel );
 
+static gchar*
+_get_icon_filename (void)
+{
+	return DATA_DIR "/pixmaps/tabu.png";
+}
+
 gboolean 
 on_title_clicked ( GtkWidget *widget, GdkEventButton *event, gpointer data )
 {
@@ -221,7 +227,8 @@ tbw_window_new ( GtkWindowType type )
   gtk_window_set_position ( GTK_WINDOW ( window ), GTK_WIN_POS_CENTER );  
   gtk_widget_set_app_paintable ( window, TRUE );
   gtk_window_set_decorated ( GTK_WINDOW ( window ), FALSE );
-	
+	gtk_window_set_icon_from_file ( GTK_WINDOW ( window ), _get_icon_filename (), NULL );	
+
   window_title = gtk_drawing_area_new ( );
   gtk_widget_set_size_request ( GTK_WIDGET ( window_title), -1, 40 );
   gtk_widget_add_events ( GTK_WIDGET ( window_title ), GDK_BUTTON_PRESS_MASK );
