@@ -1,17 +1,36 @@
 #include <gtk/gtk.h>
+#include <gst/gst.h>
 #include "tbw.h"
 
-/*static gchar *GTK_CLEAR_IMAGE = "/usr/share/icons/gnome/24x24/actions/gtk-clear.png";*/
+#define TABU_CONTROLS_HEIGHT 57
 
-#define GTK_CLEAR_IMAGE "gtk-clear"
-static gchar *gtk_clear_image_path = NULL;
+static gchar *tabu_play_icon_path = DATA_DIR "/tabu/play.png";
+static gchar *tabu_pause_icon_path = DATA_DIR "/tabu/pause.png";
+static gchar *tabu_next_icon_path = DATA_DIR "/tabu/next.png";
+static gchar *tabu_prev_icon_path = DATA_DIR "/tabu/prev.png";
+
+static gchar *tabu_clear_image_path = DATA_DIR "/tabu/clear.png";
+static gchar *tabu_add_image_path = DATA_DIR "/tabu/open.png";
 static gboolean over_addfile = FALSE;
 static gboolean over_resize = FALSE;
 static gchar *file_chooser_last_folder = NULL;
 
-static gboolean on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data );
-gboolean on_barea_motion_notify_event ( GtkWidget *widget, GdkEventMotion *event, gpointer data );
-gboolean on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer data );
+static gdouble progressvalue = 0.0;
+
+static gboolean on_barea_expose_event ( 
+  GtkWidget *widget, 
+  GdkEventExpose *event, 
+  gpointer data );
+
+gboolean on_barea_motion_notify_event ( 
+  GtkWidget *widget, 
+  GdkEventMotion *event, 
+  gpointer data );
+
+gboolean on_barea_button_press_event ( 
+  GtkWidget *widget, 
+  GdkEventButton *event, 
+  gpointer data );
 
 /* a better way to get the path of a stock image */
 gchar *
@@ -21,12 +40,18 @@ tbw_get_icon_path (const char *icon)
   GtkIconTheme	*theme = NULL;
 
   theme = gtk_icon_theme_get_default ();
-  if ( theme )
+  if (theme)
   {
-    GtkIconInfo *info = gtk_icon_theme_lookup_icon ( theme,	icon,	24,	GTK_ICON_LOOKUP_FORCE_SIZE );
-    if ( info )    {
-      ret = g_strdup ( gtk_icon_info_get_filename ( info ) );
-      gtk_icon_info_free ( info );
+    GtkIconInfo *info = gtk_icon_theme_lookup_icon ( 
+                          theme,	
+                          icon,	
+                          24,	
+                          GTK_ICON_LOOKUP_FORCE_SIZE);
+
+    if (info)    
+    {
+      ret = g_strdup (gtk_icon_info_get_filename (info));
+      gtk_icon_info_free (info);
     }
   }
   
@@ -55,6 +80,13 @@ on_barea_motion_notify_event (GtkWidget *widget, GdkEventMotion *event, gpointer
   gtk_widget_queue_draw (widget);
 
   return FALSE;
+}
+
+gboolean
+update_expose ( widget )
+{
+  gtk_widget_queue_draw ( widget );
+  return TRUE;
 }
 
 gboolean 
@@ -163,6 +195,71 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
 }
 
 static gboolean
+on_progressbar_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data )
+{
+  cairo_t *cr;
+  cairo_pattern_t *pat;
+  double x0 = 0;
+  double y0 = 0;
+  double y1 = 0;
+  double x1 = 0;
+ 
+
+ /* fondo transparente para el title */
+  cr = gdk_cairo_create ( widget->window );
+  cairo_rectangle ( cr, widget->allocation.x, widget->allocation.y, widget->allocation.width, widget->allocation.height );
+  cairo_set_source_rgba ( cr, 1.0f, 1.0f, 1.0f, 0.0f );
+	cairo_set_operator ( cr, CAIRO_OPERATOR_SOURCE );
+	cairo_paint ( cr );
+  cairo_destroy ( cr );
+
+  /* path del title */
+  cr = gdk_cairo_create ( widget->window );
+  y1 += widget->allocation.height;
+  x1 += widget->allocation.width;
+
+  cairo_move_to ( cr, x1, y1 );
+  cairo_line_to ( cr, x0, y1 );
+  cairo_line_to ( cr, x0, y0 );
+  cairo_line_to ( cr, x1, y0 );
+  cairo_close_path ( cr );
+
+  /* pintamos el path del title con un patron lineal horizontal */
+	cairo_set_operator ( cr, CAIRO_OPERATOR_SOURCE );
+  pat = cairo_pattern_create_linear ( x0, y1/2,  x1, y1/2 );
+  cairo_pattern_add_color_stop_rgba ( pat, 1, 0.0f, 0.0f, 0.0f, 0.8f );
+  cairo_pattern_add_color_stop_rgba ( pat, 0, 0.1f, 0.1f, 0.1f, 0.9f );
+  cairo_set_source ( cr, pat );
+	cairo_fill ( cr );
+  cairo_pattern_destroy ( pat );
+
+  /* dibujar progreso */
+  gint64 pos = tabu_player_get_current_position();
+  gint64 len = tabu_player_get_current_length();
+
+  gint64 prog = (x1 * pos) / len;
+
+  cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );
+  cairo_set_source_rgba ( cr, 1.0f, 0.5f, 0.0f, 0.6f );
+  cairo_set_line_width ( cr, 8 );
+  int i = 0;
+  for (i=0; i<prog; i++)
+  {
+    if ( ( i % 5 ) == 0)
+      cairo_move_to ( cr, x0 + i + 1, y0 + 5 );  
+    else
+      cairo_move_to ( cr, x0 + i, y0 + 5 );
+    cairo_line_to ( cr, x0 + i + 1, y0 + 5 );  
+  }
+
+  cairo_stroke ( cr );
+  
+  cairo_destroy ( cr );
+        
+  return FALSE;
+}
+
+static gboolean
 on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data )
 {
   cairo_t *cr;
@@ -197,129 +294,58 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
   /* pintamos el path del title con un patron lineal horizontal */
 	cairo_set_operator ( cr, CAIRO_OPERATOR_SOURCE );
   pat = cairo_pattern_create_linear ( x0, y1/2,  x1, y1/2 );
-  cairo_pattern_add_color_stop_rgba ( pat, 1, 0.0f, 0.0f, 0.0f, 0.9f );
-  cairo_pattern_add_color_stop_rgba ( pat, 0, 0.2f, 0.2f, 0.2f, 0.9f );
+  cairo_pattern_add_color_stop_rgba ( pat, 1, 0.0f, 0.0f, 0.0f, 0.8f );
+  cairo_pattern_add_color_stop_rgba ( pat, 0, 0.1f, 0.1f, 0.1f, 0.9f );
   cairo_set_source ( cr, pat );
 	cairo_fill ( cr );
   cairo_pattern_destroy ( pat );
 
-  /* dibujamos el Play Button */
-  cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );  
-  cairo_set_source_rgba ( cr, 0.0f, 0.0f, 0.0f, 1.0f );
-  cairo_set_line_width ( cr, 2.0 );
-  cairo_arc ( cr, x1 - 30, y0 + 30, 21, 0, 6.28 );
-  cairo_stroke ( cr );
-  cairo_arc ( cr, x1 - 30, y0 + 30, 20, 0, 6.28 );
-  cairo_set_source_rgba ( cr, 1.0f, 0.5f, 0.0f, 1.0f );
-	cairo_fill ( cr );
-  cairo_stroke ( cr );
-  cairo_set_operator ( cr, CAIRO_OPERATOR_ADD );
-  cairo_arc ( cr, x1 - 30, y0 + 30, 20, 3.14, 6.28 );
-  cairo_curve_to ( cr, x1 - 30, y0 + 20, x1 - 30, y0 + 40, x1 - 50, y0 + 30 );
-  cairo_set_source_rgba ( cr, 1.0f, 1.0f, 1.0f, 0.1f );
-  cairo_fill ( cr );
-  cairo_stroke ( cr );
-
-  
+  cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );
   if ( tabu_player_is_playing() )
   {
-    cairo_set_operator ( cr, CAIRO_OPERATOR_OVER ); 
-    cairo_set_line_width ( cr, 9.0 );
-    cairo_set_source_rgba ( cr, 0.1f, 0.1f, 0.1f, 0.9f );
-    cairo_move_to ( cr, x1 - 35, y0 + 18 );
-    cairo_line_to ( cr, x1 - 35, y0 + 42 );
-    cairo_move_to ( cr, x1 - 25, y0 + 18 );
-    cairo_line_to ( cr, x1 - 25, y0 + 42 );
-    cairo_stroke ( cr );    
+    image = cairo_image_surface_create_from_png ( tabu_pause_icon_path );
   }
   else
   {
-    cairo_set_operator ( cr, CAIRO_OPERATOR_OVER ); 
-    cairo_set_line_width ( cr, 9.0 );
-    cairo_set_source_rgba ( cr, 0.1f, 0.1f, 0.1f, 0.9f );
-    cairo_move_to ( cr, x1 - 38, y0 + 18 );
-    cairo_line_to ( cr, x1 - 22, y0 + 30 );
-    cairo_line_to ( cr, x1 - 38, y0 + 42 );
-    cairo_stroke ( cr );   
-  }
+    image = cairo_image_surface_create_from_png ( tabu_play_icon_path );
+  } 
+  cairo_set_source_surface ( cr, image, x1 - 48, y1 - 47 );
+  cairo_paint ( cr );
+  cairo_stroke ( cr );
+  cairo_surface_destroy ( image ); 
+  
 
   /* dibujamos el Next Button */
-  cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );  
-  cairo_set_source_rgba ( cr, 0.0f, 0.0f, 0.0f, 1.0f );
-  cairo_set_line_width ( cr, 2.0 );
-  cairo_arc ( cr, x1 - 70, y0 + 30, 16, 0, 6.28 );
-  cairo_stroke ( cr );
-  cairo_arc ( cr, x1 - 70, y0 + 30, 15, 0, 6.28 );
-  cairo_set_source_rgba ( cr, 1.0f, 0.5f, 0.0f, 0.9f );
-  cairo_fill ( cr );
-  cairo_stroke ( cr );
-  cairo_set_operator ( cr, CAIRO_OPERATOR_ADD );
-  cairo_arc ( cr, x1 - 70, y0 + 30, 15, 3.14, 6.28 );
-  cairo_curve_to ( cr, x1 - 70, y0 + 20, x1 - 70, y0 + 40, x1 - 85, y0 + 30 );
-  cairo_set_source_rgba ( cr, 1.0f, 1.0f, 1.0f, 0.1f );
-  cairo_fill ( cr );
-  cairo_stroke ( cr );
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER ); 
-  cairo_set_line_width ( cr, 4.0 );
-  cairo_set_source_rgba ( cr, 0.1f, 0.1f, 0.1f, 0.9f );
-  cairo_move_to ( cr, x1 - 72, y0 + 22 );
-  cairo_line_to ( cr, x1 - 62, y0 + 30 );
-  cairo_line_to ( cr, x1 - 72, y0 + 38 );
-  cairo_move_to ( cr, x1 - 62, y0 + 30 );
-  cairo_line_to ( cr, x1 - 78, y0 + 30 );
+  image = cairo_image_surface_create_from_png ( tabu_next_icon_path ); 
+  cairo_set_source_surface ( cr, image, x1 - 84, y1 - 42 );
+  cairo_paint ( cr );
   cairo_stroke ( cr );
-
+  cairo_surface_destroy ( image ); 
+ 
   /* dibujamos el Prev Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );  
-  cairo_set_source_rgba ( cr, 0.0f, 0.0f, 0.0f, 1.0f );
-  cairo_set_line_width ( cr, 2.0 );
-  cairo_arc ( cr, x1 - 105, y0 + 30, 16, 0, 6.28 );
+  image = cairo_image_surface_create_from_png ( tabu_prev_icon_path ); 
+  cairo_set_source_surface ( cr, image, x1 - 119, y1 - 42 );
+  cairo_paint ( cr );
   cairo_stroke ( cr );
-  cairo_arc ( cr, x1 - 105, y0 + 30, 15, 0, 6.28 );
-  cairo_set_source_rgba ( cr, 1.0f, 0.5f, 0.0f, 0.9f );
-  cairo_fill ( cr );
-  cairo_stroke ( cr );
-  cairo_set_operator ( cr, CAIRO_OPERATOR_ADD );
-  cairo_arc ( cr, x1 - 105, y0 + 30, 15, 3.14, 6.28 );
-  cairo_curve_to ( cr, x1 - 105, y0 + 20, x1 - 105, y0 + 40, x1 - 120, y0 + 30 );
-  cairo_set_source_rgba ( cr, 1.0f, 1.0f, 1.0f, 0.1f );
-  cairo_fill ( cr );
-  cairo_stroke ( cr );
-  cairo_set_operator ( cr, CAIRO_OPERATOR_OVER ); 
-  cairo_set_line_width ( cr, 4.0 );
-  cairo_set_source_rgba ( cr, 0.1f, 0.1f, 0.1f, 0.9f );
-  cairo_move_to ( cr, x1 - 103, y0 + 22 );
-  cairo_line_to ( cr, x1 - 113, y0 + 30 );
-  cairo_line_to ( cr, x1 - 103, y0 + 38 );
-  cairo_move_to ( cr, x1 - 113, y0 + 30 );
-  cairo_line_to ( cr, x1 - 97, y0 + 30 );
-  cairo_stroke ( cr );
+  cairo_surface_destroy ( image ); 
 
   /* dibujamos el Add Button */
-  cairo_set_operator ( cr, CAIRO_OPERATOR_OVER ); 
-  if ( over_addfile )
-  {
-    cairo_set_line_width ( cr, 9.0 );
-    cairo_set_source_rgba ( cr, 0.0f, 0.0f, 0.0f, 0.9f );
-    cairo_move_to ( cr, x0 + 18, y0 + 30 );
-    cairo_line_to ( cr, x0 + 42, y0 + 30 );
-    cairo_move_to ( cr, x0 + 30, y0 + 18 );
-    cairo_line_to ( cr, x0 + 30, y0 + 42 );
-    cairo_stroke ( cr );    
-  }  
-  cairo_set_line_width ( cr, 6.0 );
-  cairo_set_source_rgba ( cr, 1.0f, 0.5f, 0.0f, 0.9f );
-  cairo_move_to ( cr, x0 + 20, y0 + 30 );
-  cairo_line_to ( cr, x0 + 40, y0 + 30 );
-  cairo_move_to ( cr, x0 + 30, y0 + 20) ;
-  cairo_line_to ( cr, x0 + 30, y0 + 40 );
+  cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );
+  image = cairo_image_surface_create_from_png ( tabu_add_image_path );
+
+  cairo_set_source_surface ( cr, image, x0 + 10, y1 - 42 );
+  cairo_paint ( cr );
   cairo_stroke ( cr );
+  cairo_surface_destroy ( image );
+
 
   /* dibujamos el Clear Button */
   cairo_set_operator ( cr, CAIRO_OPERATOR_OVER );
-  image = cairo_image_surface_create_from_png ( gtk_clear_image_path );
+  image = cairo_image_surface_create_from_png ( tabu_clear_image_path );
 
-  cairo_set_source_surface ( cr, image, x0 + 50, y0 + 20 );
+  cairo_set_source_surface ( cr, image, x0 + 45, y1 - 42 );
   cairo_paint ( cr );
   cairo_stroke ( cr );
   cairo_surface_destroy ( image );
@@ -337,8 +363,43 @@ on_barea_expose_event ( GtkWidget *widget, GdkEventExpose *event, gpointer data 
     cairo_stroke ( cr );    
   }  
 
-  cairo_destroy (cr);
+  gchar time_buffer[25];
+  
+  g_snprintf(time_buffer, 24, 
+    "%u:%02u.%02u", 
+    GST_TIME_ARGS ( tabu_player_get_current_position()));
+  /*
+  gchar length_buffer[25];
+  gchar diff_buffer[25];
+  g_snprintf(length_buffer, 24, 
+    "%u:%02u.%02u", 
+    GST_TIME_ARGS ( tabu_player_get_current_length ()));
+  g_snprintf(diff_buffer, 24, 
+    "%u:%02u.%02u", 
+    GST_TIME_ARGS ( tabu_player_get_current_length () - tabu_player_get_current_position ()));
+  */
 
+  cairo_select_font_face ( cr, "monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
+  cairo_set_font_size ( cr, 11.0 );
+  cairo_set_source_rgba ( cr, 1.0, 0.5, 0.0, 0.8f );
+  cairo_move_to ( cr, x1 - 172, y1 - 20 );
+  cairo_show_text ( cr, time_buffer);
+  cairo_stroke ( cr );
+
+  /*
+  cairo_set_source_rgba ( cr, 1.0, 1.0, 1.0, 0.1f );
+  cairo_move_to ( cr, x0 + 100, y1 - 33 );
+  cairo_show_text ( cr, length_buffer);
+  cairo_stroke ( cr );
+
+  cairo_set_source_rgba ( cr, 1.0, 0.2, 0.0, 0.1f );
+  cairo_move_to ( cr, x0 + 100, y1 - 8 );
+  cairo_show_text ( cr, diff_buffer);
+  cairo_stroke ( cr );
+  */
+
+  cairo_destroy ( cr );
+        
   return FALSE;
 }
 
@@ -346,9 +407,8 @@ GtkWidget *
 tbw_controls_new ( GtkListStore *playlist )
 {
   GtkWidget *barea;
+  GtkWidget *progressbar_area;
   GtkWidget *box;
-
-  gtk_clear_image_path = tbw_get_icon_path ( GTK_CLEAR_IMAGE );
 
   barea = gtk_drawing_area_new ( );
   gtk_widget_add_events ( GTK_WIDGET ( barea ), GDK_BUTTON_PRESS_MASK );
@@ -357,10 +417,19 @@ tbw_controls_new ( GtkListStore *playlist )
   g_signal_connect ( barea, "motion-notify-event", G_CALLBACK ( on_barea_motion_notify_event ), NULL );
   g_signal_connect ( barea, "expose-event", G_CALLBACK ( on_barea_expose_event ), NULL );
 
-  box = gtk_hbox_new ( FALSE, 0 );
-  gtk_widget_set_size_request ( GTK_WIDGET ( box ), -1, 60 );
+  progressbar_area = gtk_drawing_area_new ( );
+  g_signal_connect ( progressbar_area, "expose-event", G_CALLBACK ( on_progressbar_expose_event ), NULL );
+
+  box = gtk_vbox_new ( FALSE, 0 );  
+  gtk_widget_set_size_request ( GTK_WIDGET ( barea ), -1, TABU_CONTROLS_HEIGHT - 10 );
+  gtk_widget_set_size_request ( GTK_WIDGET ( progressbar_area ), -1, 10 );
+  gtk_box_pack_start ( GTK_BOX ( box ), GTK_WIDGET ( progressbar_area), TRUE, TRUE, 0 );
   gtk_box_pack_start ( GTK_BOX ( box ), GTK_WIDGET ( barea ), TRUE, TRUE, 0 );
+
   gtk_widget_show_all ( GTK_WIDGET ( box ) );
+
+  g_timeout_add (500, (GSourceFunc) update_expose, progressbar_area);
+  g_timeout_add (1000, (GSourceFunc) update_expose, barea);
 
   return ( box );
 }

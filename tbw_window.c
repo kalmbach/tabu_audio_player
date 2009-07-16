@@ -15,7 +15,7 @@ static void on_alpha_screen_changed ( GtkWidget* pWidget, GdkScreen* pOldScreen,
 static gchar*
 _get_icon_filename (void)
 {
-	return DATA_DIR "/pixmaps/tabu.png";
+	return DATA_DIR "/tabu/tabu.png";
 }
 
 gboolean 

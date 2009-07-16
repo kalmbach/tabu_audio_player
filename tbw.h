@@ -26,6 +26,8 @@ void tabu_player_clear_playlist ( );
 void tabu_player_play_selection ( GtkTreeSelection *selection );
 void tabu_player_remove_selection ( GtkTreeSelection *selection );
 gboolean tabu_player_is_playing ( );
+gint64 tabu_player_get_current_position ( );
+gint64 tabu_player_get_current_length ( );
 
 #endif
 

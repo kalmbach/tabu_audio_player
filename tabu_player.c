@@ -8,11 +8,31 @@ static gchar *current_song = NULL;
 static GMainLoop *loop = NULL;
 static GtkTreeIter iter;
 static gchar *pointer = "<span size='smaller'>></span>";
+static gint64 song_position = 0;
+static gint64 song_length = 0;
 
 gboolean
 tabu_player_is_playing ()
 {
   return ( playing );
+}
+
+gint64
+tabu_player_get_current_length ()
+{
+  GstFormat fmt = GST_FORMAT_TIME;
+
+  gst_element_query_duration (pipeline, &fmt, &song_length);  
+  return ( song_length );
+}
+
+gint64
+tabu_player_get_current_position ()
+{
+  GstFormat fmt = GST_FORMAT_TIME;
+
+  gst_element_query_position (pipeline, &fmt, &song_position);
+  return ( song_position );
 }
 
 void 
