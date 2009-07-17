@@ -92,7 +92,7 @@ add_item_to_playlist ( GtkListStore *store, gchar* filename, gchar *uri )
     return;
 
 	gtk_list_store_append ( store, &iter );
-  gtk_list_store_set ( store, &iter, 0, "", 1, row, 2, uri, -1 );
+  gtk_list_store_set ( store, &iter, 0, "", 1, row, 2, "", 3, uri, -1 );
 
   g_free ( row );
 }
@@ -147,7 +147,8 @@ main ( int argc, char *argv[] )
   renderer = gtk_cell_renderer_text_new ( );
   gtk_tree_view_insert_column_with_attributes ( GTK_TREE_VIEW ( view ), -1, "Columna", renderer, "markup", 0, NULL );
   gtk_tree_view_insert_column_with_attributes ( GTK_TREE_VIEW ( view ), -1, "Columna", renderer, "markup", 1, NULL );
-  store = gtk_list_store_new ( 3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING );
+  gtk_tree_view_insert_column_with_attributes ( GTK_TREE_VIEW ( view ), -1, "Columna", renderer, "markup", 2, NULL );
+  store = gtk_list_store_new ( 4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING );
   gtk_tree_view_set_model ( GTK_TREE_VIEW ( view ), GTK_TREE_MODEL ( store ) );  
 
   g_signal_connect ( G_OBJECT ( view ), "row-activated", G_CALLBACK ( playlist_row_activated_callback ), NULL );

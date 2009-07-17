@@ -96,10 +96,10 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
   {
     if ( event->button == 1 )
     {        
-      /* El Boton de Agregar archivos ha sido presionado */
-      if ( ( event->y > 20 ) && ( event->y < 40 ) )
+      /* El Boton de Agregar archivos ha sido presionado x0 + 10, y1 - 42 */
+      if ( ( event->y > 6 ) && ( event->y < 40 ) )
       {
-        if ( ( event->x > 20 ) && ( event->x < 40 ) )
+        if ( ( event->x > 9 ) && ( event->x < 45 ) )
         {
           GtkWidget *selection;
           gint response;
@@ -142,37 +142,37 @@ on_barea_button_press_event ( GtkWidget *widget, GdkEventButton *event, gpointer
         }
       }         
 
-      /* Play button baby */
-      if ( ( event->y > 10 ) && ( event->y < 50 ) )
+      /* Play button baby  x1 - 48, y1 - 47 */
+      if ( ( event->y > 1 ) && ( event->y < 45 ) )
       {
-        if ( ( event->x > ( widget->allocation.width - 50 ) ) && ( event->x < ( widget->allocation.width - 10 ) ) )
+        if ( ( event->x > ( widget->allocation.width - 48 ) ) && ( event->x < ( widget->allocation.width - 4 ) ) )
         {
           tabu_player_play ();
         }
       }
 
-      /* Es hora del siguiente */
-      if ( ( event->y > 15 ) && ( event->y < 45 ) )
+      /* Es hora del siguiente x1 - 84, y1 - 42 */
+      if ( ( event->y > 6 ) && ( event->y < 41 ) )
       {
-        if ( ( event->x > ( widget->allocation.width - 85 ) ) && ( event->x < ( widget->allocation.width - 55 ) ) )
+        if ( ( event->x > ( widget->allocation.width - 84 ) ) && ( event->x < ( widget->allocation.width - 50 ) ) )
         {
           tabu_player_next ();
         }
       }    
 
-      /* Volveeeer, con la frente marchita...  */
-      if ( ( event->y > 15 ) && ( event->y < 40 ) )
+      /* Volveeeer, con la frente marchita... x1 - 119, y1 - 42 */
+      if ( ( event->y > 6 ) && ( event->y < 41 ) )
       {
-        if ( ( event->x > ( widget->allocation.width - 120 ) ) && ( event->x < ( widget->allocation.width - 90 ) ) )
+        if ( ( event->x > ( widget->allocation.width - 119 ) ) && ( event->x < ( widget->allocation.width - 85 ) ) )
         {
           tabu_player_previous ();
         }
       }    
 
-      /* A limpiar, a limpiar, cada cosa en su lugar */
-      if ( ( event->y > 20 ) && ( event->y < 45 ) )
+      /* A limpiar, a limpiar, cada cosa en su lugar x0 + 45, y1 - 42 */
+      if ( ( event->y > 6 ) && ( event->y < 41 ) )
       {
-        if ( ( event->x > 50 ) && ( event->x < 70 ) ) 
+        if ( ( event->x > 45 ) && ( event->x < 79 ) ) 
         {
           clear_tabu_playlist ();
         }
